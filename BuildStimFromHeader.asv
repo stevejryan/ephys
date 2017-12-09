@@ -1,0 +1,44 @@
+function stimChannel = BuildStimFromHeader( h, si, channel )
+% Inputs:
+%    h: select parameters from abf file header 
+%   si: sampling interval in microseconds
+%
+% Outputs:
+%   Some stuff I guess
+
+channel = channel + 1; % PClamp channels index from 0, matlab indexes from1
+DACEpoch = h.DACEpoch(channel);
+numEpisodes = h.lActualEpisodes;
+numEpochs = numel( DACEpoch.nEpochType );
+epochLengthInPts = h.dataPtsPerChan;
+si = si / 1000; % convert si to milliseconds
+
+% loop over episodes
+% Have to loop over episodes first instead of epochs because epochs aren't
+% guaranteed to be the same duration, which would make it difficult to
+% concatenate them
+allEpisodes = cell( 1, numEpisodes );
+for episode=1:numEpisodes
+  singleEpisode = [];
+  for epoch = 1:numEpochs
+    epochType = DACEpoch.nEpochType(epoch);
+    if epochType == 1
+      % Step
+      
+    elseif epochType == 2
+      % ramp
+
+    else
+      % unknown
+      warning( 'Epoch type %s unknown', num2str( epochType ) )
+
+    end
+  end
+  singleEpisode = [zeros( 1, 390 ), singleE
+  allEpisodes{episode} = singleEpisode;
+  
+end
+
+% add holding values at beginning and end
+% Note:  Beginning comes from h.DACepoch.firstHolding, end will have to be
+%        inferred
