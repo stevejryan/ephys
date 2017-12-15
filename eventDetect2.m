@@ -1,96 +1,88 @@
-function [eventStarts eventThresh] = eventDetect2(trace,samplesPerMs,episode)%,spikeSlopeThresh,use)%,fAHPThresh)
-%[eventStarts eventThresh] = eventDetect2(trace,samplesPerMs)
+function spikeStartIndices = eventDetect2( trace, samplesPerMs, varargin )
+% [eventStarts eventThresh] = eventDetect2(trace,samplesPerMs)
 %
-%eventDetect analyzes a voltage trace to determine where putative 
-%spike-initiation sites are, and returns a pair of vectors.
+% eventDetect analyzes a voltage trace to determine where putative 
+% spike-initiation sites are, and returns a pair of vectors.
 %
-%-trace is a single sweep/episode/trace of intracellular recording that
-%putatively contains spikes.  
-%-samplesPerMs is # of samples per ms
+% -trace is a single sweep/episode/trace of intracellular recording that
+%  putatively contains spikes.  
+% -samplesPerMs is # of samples per ms
 %
-%-eventStarts contains the start-time (in ms) of each putative event
-%-eventThresh contains the membrane potential at each of these putative
-% %events (in the same order, for consistency)
-% 
-% dllname = 'P:\Steve\Data\axon\SourceCode\AxonDev\Comp\AxAbfFio32\abffio.dll';
-% % filename = 'R310108_0001.abf';
-% filename = 'D01040109_0004.abf';
-% channel = 0;
-% [data, times, npoints, s]=ABFGetADCChannel(dllname, filename, channel);
-% trace=data(:,4);
-% samplesPerMs = 10;
-% episode = 4;
+% -eventStarts contains the start-time (in ms) of each putative event
+% -eventThresh contains the membrane potential at each of these putative
+%  events (in the same order, for consistency)
 
-f = trace;
-f1 = zeros(1,length(f)-1);
-f2 = zeros(1,length(f1)-1);
-
-% for i=2:length(f)
-%     f1(i-1) = f(i) - f(i-1);
-% end
-f1 = f(2:end) - f(1:end-1);
-
-f1s = smooth(f1,3);
-
-% for i=2:length(f1)
-%     f2(i-1) = f1(i) - f1(i-1);
-% end
-f2 = f1(2:end) - f1(1:end-1);
-
-f2s = smooth(f2,3);
-f2sMean = mean(f2s);
-f2sSTD = std(f2s);
-threshold = f2sMean + 2*f2sSTD;
-% disp('four sds')
-
-% t0=1:length(f);
-% t1 = 1.5:1:24999.5;
-% t2 = 2:24999;
-f1s = f1s';
-f2s = f2s';
-
-% This sequence looks for local maxima in the second derivative (f2) that
-% are associated with positive slopes and marks them as potential event
-% initiation points
-
-count = 0;
-times = 0;
-for i=2:length(f2s)-2;
-    if (f2s(i) > threshold)         
-        if (f2s(i) > f2s(i-1))
-            if (f2s(i) < f2s(i+1))
-                if (f1s(i) > 0)
-                    count = count + 1;
-                    times(count) = i;
-                end
-            end
-        end
-    end
+  % use an inputParser object to parse options passed in from above
+  optionParser = inputParser();
+  optionParser.StructExpand = true;
+  optionParser.KeepUnmatched = true;
+  % length of time after spike to keep for eventStack (in ms)
+  optionParser.addParameter( 'debugPlots', true );
+  % When sorting candidate spike locations, how large should be the window
+  % to cluster a set of samples into one 'candidate'
+%   optionParser.addParameter( 'clusterWindow', 2 );
+  % pass to a function to do a little extra parsing
+  options = parseOptions( optionParser, varargin{:} );
+  
+  f = trace;
+  f1 = diff( f );
+  f2 = [0; diff( f1 ); 0];
+  f1s = smooth(f1,3);
+  f2s = smooth(f2,3);
+  f3 = diff( f2s );
+  f2sMean = mean(f2s);
+  f2sSTD = std(f2s);
+  threshold = mean( f2s ) + 2*std( f2s );
+  
+  % Generates a list of candidate locations for spikes by looking for
+  % places where:
+  % 1. Second derivative is unusually high
+  % 2. Second derivative is increasing
+  % 3. First derivative is positive, so we're finding the upstroke of a
+  %    spike and not the recovery / AHP
+  candidateIndices = find( [(f2s > threshold)] & [(f3 > 0); 0 ] & ([f1s; 0] > 0) );
+  candidateClusters = clusterdata( candidateIndices, 1 );
+  numClusters = numel( unique( candidateClusters ) );
+  candidatePeaks = zeros( numClusters, 1 );
+  for cluster = 1:numClusters
+    clusterInds = candidateIndices(candidateClusters == cluster);
+    [~, I] = max( f2(clusterInds) );
+    candidatePeaks(cluster) = clusterInds(I);
+  end
+  spikeStartIndices = candidatePeaks;
+  
+  if options.debugPlots
+    figHandle = figure;
+    a = gca;
+    hold( a, 'on' )
+    traceLine = plot( f - mean( f ), 'b-' );
+    f1Line = plot( f1, 'r-' );
+    f2Line = plot( f2, 'k-' );
+    XLim = a.XLim;
+    thresholdLine = line( XLim, [threshold, threshold] );
+    line( XLim, -1*[threshold, threshold] )
+    candidateLine = plot( candidateIndices, f(candidateIndices) - mean( f ), 'kx' );
+    peakLine = plot( spikeStartIndices, f(spikeStartIndices) - mean( f ), 'ro' );
+    legend( [traceLine, f1Line, f2Line, thresholdLine, candidateLine, ...
+      peakLine], {'Raw Trace', 'f1', 'f2', 'detection threshold', ...
+      'first pass candidates', 'selected candidates'} );
+  end
 end
 
-% This is a cleanup step to catch any places where multiple initiations are
-% detected within a very close range of one another.  This filter is fairly
-% liberal, and events generated here will be run through eventReject for
-% more strenuous filtering
-times2 = times;
-count = 1;
-for j=1:length(times)
-    if (count ~= j)
-        if (abs(times(count) - times(j)) < 2*samplesPerMs)
-            times2(j) = 0;
-        else
-            count = j;
-        end        
-    end
+%%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%%
+% sequester the code for parsing input into this function down here
+function options = parseOptions( parser, varargin )
+  % doesn't need to be stored, obj is persistent
+  parser.parse( varargin{:} );
+  % collect results of parsing into options object.  This excludes any
+  % unmatched fields
+  options = parser.Results;
+  % collect any unmatched fields and assign them to normal fields.  These
+  % may be useless, but this is the conservative, forward-thinking thing to
+  % do in case functions at lower levels of hierarchy need options passed
+  % form multiple layers above.
+  UnmatchedFields = fieldnames( parser.Unmatched );
+  for i=1:numel( UnmatchedFields )
+    options.(UnmatchedFields{i}) = parser.Unmatched.(UnmatchedFields{i});
+  end
 end
-
-%+1 compensates for the difference in indexing between second derivative
-%and raw trace
-% "find(times2~=0) allows it to ignore times that were eliminated above
-eventStarts = (times2(find(times2~=0))+1)/samplesPerMs;
-eventThresh = f(eventStarts*samplesPerMs);
-
-% figure(10)
-% plot(2:length(f2)+1,f2-40,'g-',1:length(f),f,'b-',1.5:length(f1)+0.5,f1-40,'r-',eventStarts*samplesPerMs,eventThresh,'ro')
-% print('-dpng',[num2str(episode) '_derivatives.png']);
-% saveas(10,[num2str(episode) '_derivatives.fig']);
