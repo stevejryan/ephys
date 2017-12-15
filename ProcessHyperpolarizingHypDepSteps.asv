@@ -38,8 +38,14 @@ function [hyp, options] = ProcessHyperpolarizingHypDepSteps( analysis, abfStim, 
     
     % time constant, 63.21%
     timeConstantTrace = smoothTrace(1:IhIndex);
-    timeConstantTrace = (timeConstantTrace - timeConstantTrace(1)) / timeConstantTrace(end);
-    
+    timeConstantTrace = (timeConstantTrace - timeConstantTrace(1)); 
+    timeConstantTrace = timeConstantTrace ./ timeConstantTrace(end);
+    belowTimeConstant = timeConstantTrace < 0.6321;
+    tauThreshold = 
+    % it occurs to me to wonder how this will handle jaggedy steps with
+    % more than one solution to this equation.  ¯\_(?)_/¯
+    Vq = interp1( timeConstantTrace, 1:numel( timeConstantTrace ), 0.6321 );
+    hyp.tau(episode) = Vq * samplesPerMs;
   end
   
   % IAR

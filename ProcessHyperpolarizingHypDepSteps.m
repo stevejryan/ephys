@@ -40,8 +40,9 @@ function [hyp, options] = ProcessHyperpolarizingHypDepSteps( analysis, abfStim, 
     timeConstantTrace = smoothTrace(1:IhIndex);
     timeConstantTrace = (timeConstantTrace - timeConstantTrace(1)); 
     timeConstantTrace = timeConstantTrace ./ timeConstantTrace(end);
-    Vq = interp1( timeConstantTrace, 1:numel( timeConstantTrace ), 0.6321 );
-    hyp.tau(episode) = Vq * samplesPerMs;
+    aboveTimeConstant = timeConstantTrace > 0.6321;
+    tauThreshold = find( aboveTimeConstant, 1, 'first' );
+    hyp.tau(episode) = tauThreshold * samplesPerMs;
   end
   
   % IAR
