@@ -30,8 +30,9 @@ function stimChannel = BuildStimFromHeader( h, si, channel )
       elseif epochType == 2
         % ramp
         stepDur = DACEpoch.lEpochInitDuration(epoch) + (episode-1)*DACEpoch.lEpochDurationInc(epoch);
-        stepAmp = DACEpoch.fEpochInitLevel(epoch) + (episode-1)*DACEpoch.fEpochLevelInc(epoch);        
-        singleEpoch = linspace( 0, stepAmp, stepDur );
+        stepAmp = DACEpoch.fEpochInitLevel(epoch) + (episode-1)*DACEpoch.fEpochLevelInc(epoch);
+        
+        warning( 'Steve''s a lazy shit and hasn''t written this part yet' )
       else
         % unknown
         warning( 'Epoch type %s unknown', num2str( epochType ) )
