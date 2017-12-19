@@ -1,0 +1,18 @@
+function summary = AnalyzeFolderOfHypDeps( directory, varargin )
+  % use an inputParser object to parse options passed in from above
+  optionParser = inputParser();
+  optionParser.StructExpand = true;
+  optionParser.KeepUnmatched = true;
+  % default value for amplifier channel
+  optionParser.addParameter( 'ampChannel', 0 );
+  % flag to save individual mat files
+  optionParser.addParameter( 'saveMatFile', false );
+  % flag to save summary spreadsheet and mat file
+  optionParser.addParameter( 'produceSummaryTable', true );
+  % pass to a function to do a little extra parsing
+  options = parseOptions( optionParser, varargin{:} );
+  
+  cd( directory )
+  abfList = dir( '*.abf' );
+  for file = 1:numel( abfList )
+    analysis(file) = AnalyzeHypDep( abfList(file).name, o );

@@ -75,7 +75,10 @@ function spikeStartIndices = detectSpikes( trace, options )
   candidatePeaks = zeros( numClusters, 1 );
   for cluster = 1:numClusters
     clusterInds = candidateIndices(candidateClusters == cluster);
-    [~, I] = max( f2(clusterInds) );
+    % if you want the index of the local max in the second derivative
+    % [~, I] = max( f2(clusterInds) );
+    % if instead you want the first index that was above threshold
+    I = 1;
     candidatePeaks(cluster) = clusterInds(I);
   end
   spikeStartIndices = sort( candidatePeaks );

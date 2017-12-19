@@ -47,6 +47,11 @@ function spikeStruct = interpolateTimingParameters( samplesPerMs, ...
     spike(1:options.preSpikeSamples) = [];
     spikeEndInd = find( spike < spikeStruct.spikeThreshold(i), 1, 'first' );
     spike(spikeEndInd+1:length( spike )) = [];
+    % this shitty line right here is necessary to help interp1 not
+    % occasionally throw errors about non-unique points.  eps is on the
+    % order of E-16, so 100 eps is still waaaaay below the noise floor and
+    % won't affect extracted features.
+    spike = spike + (100*eps*(1:numel( spike )))';
     [~, peak] = max( spike );
     fractionsOfInterest = [0.1, 0.2, 0.5, 0.8, 0.9];
     fractionSamples = NaN( 2, numel( fractionsOfInterest ) );
@@ -165,7 +170,7 @@ function spikeStruct = findAhpParameters( trace, samplesPerMs, spikeStruct, opti
 
     [~, peak] = max( spike );
     if length( spike ) >= peak+options.fAhpWindow(2)*samplesPerMs
-      fAhpTrace = spike(peak+options.fAhpWindow(1)*samplesPerMs:peak+options.fAhpWindow(2))*samplesPerMs;
+      fAhpTrace = spike(peak+options.fAhpWindow(1)*samplesPerMs:peak+options.fAhpWindow(2)*samplesPerMs);
       mAhpTrace = spike(peak+options.fAhpWindow(2)*samplesPerMs:end);
     else
       fAhpTrace = spike(peak+options.fAhpWindow(1)*samplesPerMs:end);

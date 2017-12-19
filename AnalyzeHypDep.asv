@@ -63,14 +63,15 @@ function analysis = AnalyzeHypDep( filename, varargin )
   [analysis.hyp, options] = ProcessHyperpolarizingHypDepSteps( analysis, abfStim, samplesPerMs, options );
   
   % plot summary figure(s)
-  if options.summaryPlots
-    PlotSummaryFigure( analysis );
-  end
+  PlotSummaryFigure( analysis );
+  
   % Create and store summary row as table in analysis object.  Desirable if
   % you're analyzing a large number of hypdeps simultaneously and you want
   % to produce a summary table by concatenating a large number of analysis
   % objects
-  analysis.summary = ProduceHypDepSummary( analysis );
+  
+    analysis.summary = ProduceHypDepSummary( analysis );
+  end
   analysis.options = options;
   if options.saveMatFile
     save( analysis.cellId, 'analysis' )

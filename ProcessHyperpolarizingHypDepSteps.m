@@ -26,14 +26,15 @@ function [hyp, options] = ProcessHyperpolarizingHypDepSteps( analysis, abfStim, 
     % Assumption here that IH point is in the first half
     [IhMinPoint, IhIndex] = min( smoothTrace(1:round( traceLength / 2 )) );
     steadyState = median( smoothTrace(round( 3*traceLength/4:end )) );
-    baseline = median( analysis.rawTraces(1:stimOn-1, episodeIndex) );
-    hyp.IhTime(episode) = IhIndex * samplesPerMs;
+    baseline(episode) = median( analysis.rawTraces(1:stimOn-1, episodeIndex) );
+    hyp.IhTime(episode) = IhIndex / samplesPerMs;
+    hyp.IhIndex(episode) = IhIndex + stimOn - 1;
     hyp.IhMin(episode) = IhMinPoint;
     hyp.IhRatio(episode) = (IhMinPoint - steadyState) / IhMinPoint;
     hyp.steadyState(episode) = steadyState;
     
     % input resistance
-    Rin = ((IhMinPoint - baseline) / 1000) / (hyp.stepSizes(episode) / 1e12);
+    Rin = ((IhMinPoint - baseline(episode)) / 1000) / (hyp.stepSizes(episode) / 1e12);
     hyp.Rin(episode) = Rin / 1e6; % puts Rin in Megaohms, assuming it was originally in mV and pA
     
     % time constant, 63.21%
@@ -42,8 +43,19 @@ function [hyp, options] = ProcessHyperpolarizingHypDepSteps( analysis, abfStim, 
     timeConstantTrace = timeConstantTrace ./ timeConstantTrace(end);
     aboveTimeConstant = timeConstantTrace > 0.6321;
     tauThreshold = find( aboveTimeConstant, 1, 'first' );
-    hyp.tau(episode) = tauThreshold * samplesPerMs;
+    hyp.tau(episode) = tauThreshold / samplesPerMs;
+    hyp.tauSample(episode) = tauThreshold + stimOn - 1;
   end
   
   % IAR
+  % must be at least three steps to compare
+  if numel( hyp.hyperpolarizingStepIndices ) > 3
+    IhMin = hyp.IhMin;
+    hyp.IAR = ((IhMin(1) - baseline(1)) - (IhMin(2) - baseline(2))) / (IhMin(end) - baseline(end));
+    if (hyp.stepSizes(1) - hyp.stepSizes(2)) ~= hyp.stepSizes(end)
+      warning( 'Warning, IAR computation may be invalid, step sizes are irregular' )
+    end
+  else 
+    hyp.IAR = NaN;
+  end
 end

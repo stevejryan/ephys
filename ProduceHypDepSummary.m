@@ -1,19 +1,13 @@
 function summaryRow = ProduceHypDepSummary( analysis )
 
-  % IH	IAR	Tau	Rin	Amplitudes	Half Widths	Rise Time 10-90%	Decay Time 90-10%	Threshold	ISI1	ISIN	ISI1/ISIN	fAHP Diff
-  varNames = {'IH', 'IAR', 'Tau', 'Rin', 'Amplitude', 'HalfWidth', 'RiseTime', 'DecayTime', 'Threshold', 'ISI1', 'ISIN', 'ISI1overN', 'fAHP'};
-  summaryRow = array2table( NaN( 1, 13 ), 'VariableNames', varNames );
+  varNames = {'IH', 'IAR', 'Tau', 'Rin', 'ISI1', 'ISIN', 'ISI1overN', 'fAHP'};
+  summaryRow = array2table( NaN( 1, numel( varNames ) ), 'VariableNames', varNames );
   catSpikes = concatenateSpikeStruct( analysis );
 
   summaryRow.IH = analysis.hyp.IhRatio(1);
-  summaryRow.IAR = NaN;
-  summaryRow.Tau = analysis.hyp.tau(1);
-  summaryRow.Rin = analysis.hyp.Rin(1);
-  summaryRow.Amplitude = nanmedian( catSpikes.height - catSpikes.spikeThreshold );
-  summaryRow.HalfWidth = nanmedian( catSpikes.AP50 );
-  summaryRow.RiseTime = nanmedian( catSpikes.riseTime );
-  summaryRow.DecayTime = nanmedian( catSpikes.decayTime );
-  summaryRow.Threshold = nanmedian( catSpikes.spikeThreshold );
+  summaryRow.IAR = analysis.hyp.IAR;
+  summaryRow.Tau = analysis.hyp.tau(end);
+  summaryRow.Rin = analysis.hyp.Rin(end);
   summaryRow.ISI1 = nanmedian( analysis.dep.firstIsi );
   summaryRow.ISIN = nanmedian( analysis.dep.lastIsi );
   summaryRow.ISI1overN = nanmedian( analysis.dep.firstIsi ./ analysis.dep.lastIsi );
