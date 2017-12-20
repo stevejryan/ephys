@@ -1,4 +1,4 @@
-function f = PlotSummaryFigure( analysis )
+function f = PlotHypDepSummaryFigure( analysis )
   f = figure;
   a = gca;
   plot( analysis.rawTraces, 'b-' )

@@ -64,7 +64,7 @@ function analysis = AnalyzeHypDep( filename, varargin )
   
   % plot summary figure(s)
   if options.summaryPlots
-    PlotSummaryFigure( analysis );
+    PlotHypDepSummaryFigure( analysis );
   end
   % Create and store summary row as table in analysis object.  Desirable if
   % you're analyzing a large number of hypdeps simultaneously and you want
