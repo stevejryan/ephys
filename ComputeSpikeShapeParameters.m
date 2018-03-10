@@ -12,11 +12,11 @@ function [spikeStruct, options] = ComputeSpikeShapeParameters( trace, samplesPer
   % pass to a function to do a little extra parsing
   options = parseOptions( optionParser, varargin{:} );
   
+  spikeStruct = CreateSpikeStruct( numel( spikeStartIndices ) );
   if numel( spikeStartIndices ) == 0
-    spikeStruct = CreateSpikeStruct(0);
     return;
   end
-  spikeStruct = CreateSpikeStruct( numel( spikeStartIndices ) );
+  
   for spikeNum = 1:numel( spikeStartIndices )
     spikeStruct.spikeInitIndex(spikeNum) = spikeStartIndices(spikeNum);
     spikeStruct.spikeTimeMs(spikeNum) = spikeStartIndices(spikeNum) / samplesPerMs;
@@ -24,7 +24,13 @@ function [spikeStruct, options] = ComputeSpikeShapeParameters( trace, samplesPer
     eventStart = spikeStartIndices(spikeNum) - options.preSpikePeriod*samplesPerMs;
     eventStop = spikeStartIndices(spikeNum) + options.postSpikePeriod*samplesPerMs;
     spikeStruct.spikeWaveforms(:, spikeNum) = trace(eventStart:eventStop);
+    if (spikeStartIndices(spikeNum)+options.spikeWindow) > length( trace )
+      % protection against some unusual cases where options.spikeWindow
+      % gets set to a large number
+      options.spikeWindow = length( trace ) - spikeStartIndices(spikeNum);
+    end
     spikePeak = max( trace(spikeStartIndices(spikeNum):spikeStartIndices(spikeNum)+options.spikeWindow) );
+    spikeStruct.spikePeak(spikeNum) = spikePeak;
     spikeStruct.height(spikeNum) = spikePeak - spikeStruct.spikeThreshold(spikeNum);
   end
   
@@ -45,14 +51,16 @@ function spikeStruct = interpolateTimingParameters( samplesPerMs, ...
     height = spikeStruct.height(i);
     spike = spikeStruct.spikeWaveforms(:,i);
     spike(1:options.preSpikeSamples) = [];
-    spikeEndInd = find( spike < spikeStruct.spikeThreshold(i), 1, 'first' );
+%     [~, peak] = max( spike );
+    peak = find( spike == spikeStruct.spikePeak(i), 1, 'first' );
+    spikeEndInd = find( spike(peak:end) < spikeStruct.spikeThreshold(i), 1, 'first' ) + peak - 1;
     spike(spikeEndInd+1:length( spike )) = [];
     % this shitty line right here is necessary to help interp1 not
     % occasionally throw errors about non-unique points.  eps is on the
     % order of E-16, so 100 eps is still waaaaay below the noise floor and
     % won't affect extracted features.
     spike = spike + (100*eps*(1:numel( spike )))';
-    [~, peak] = max( spike );
+%     [~, peak] = max( spike );
     fractionsOfInterest = [0.1, 0.2, 0.5, 0.8, 0.9];
     fractionSamples = NaN( 2, numel( fractionsOfInterest ) );
     for fraction = 1:numel( fractionsOfInterest )
@@ -100,7 +108,7 @@ function spikeStruct = findDerivParameters( samplesPerMs, spikeStruct, options )
         % the next spike is likely in this window  
         [~, peak] = max( f(1:spikeStruct.spikeInitIndex(i+1) - spikeStruct.spikeInitIndex(i) + options.preSpikeSamples) );
         postSpikeDerivWindow = spikeStruct.spikeInitIndex(i+1) - ...
-          spikeStruct.spikeInitIndex(i) - peak + options.preSpikeSamples;
+          spikeStruct.spikeInitIndex(i) + options.preSpikeSamples; % - peak 
       else
         [~, peak] = max( f );
         postSpikeDerivWindow = length( f1 );

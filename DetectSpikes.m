@@ -23,7 +23,7 @@ function [spikeStartIndices, options] = DetectSpikes( trace, samplesPerMs, varar
   optionParser.addParameter( 'minSpikeHeight', -10 )
   % When sorting candidate spike locations, how large should be the window
   % to cluster a set of samples into one 'candidate'
-  optionParser.addParameter( 'clusterWindow', 5 );
+  optionParser.addParameter( 'clusterWindow', 15 );
   % pass to a function to do a little extra parsing
   options = parseOptions( optionParser, varargin{:} );
   
@@ -137,7 +137,7 @@ function [spikeStartIndices, options] = cleanupSpikes( trace, spikeStartIndices,
     end
   end
   % record window used for spike windowing
-  options.spikeWindow = smallestIsiInSamples;
+  options.spikeWindow = min( [1000, smallestIsiInSamples] );
   % the liberal quality of the previous filter leaves open the possibility
   % that artifacts at the beginning of the trace may be picked up as spike
   % initiation sites because a spike shortly afterwards fulfills the

@@ -32,14 +32,17 @@ function [dep, options] = ProcessDepolarizingHypDepSteps( analysis, abfStim, sam
       for j=1:numel( spikeFields )
         spikes.(spikeFields{j})(:, spikeOutsideStim) = [];
       end
-      if numSpikes > 1
-        dep.firstIsi(episode) = spikes.spikeTimeMs(2) - spikes.spikeTimeMs(1);
-        dep.lastIsi(episode) = spikes.spikeTimeMs(end) - spikes.spikeTimeMs(end-1);
-      else
-        dep.firstIsi(episode) = NaN;
-        dep.lastIsi(episode) = NaN;
+      numSpikes = numel( spikes.spikeInitIndex );
+      if numSpikes > 0
+        if numSpikes > 1
+          dep.firstIsi(episode) = spikes.spikeTimeMs(2) - spikes.spikeTimeMs(1);
+          dep.lastIsi(episode) = spikes.spikeTimeMs(end) - spikes.spikeTimeMs(end-1);
+        else
+          dep.firstIsi(episode) = NaN;
+          dep.lastIsi(episode) = NaN;
+        end
+        dep.latencyToFirstSpike(episode) = (spikes.spikeInitIndex(1) - stimOn) / samplesPerMs;
       end
-      dep.latencyToFirstSpike(episode) = (spikes.spikeInitIndex(1) - stimOn) / samplesPerMs;
     end
     depSpikes(episode) = spikes;
   end

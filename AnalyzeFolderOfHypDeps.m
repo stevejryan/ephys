@@ -19,14 +19,26 @@ function summary = AnalyzeFolderOfHypDeps( directory, varargin )
   summary = [];
   for file = 1:numel( abfList )
     analysis(file) = AnalyzeHypDep( abfList(file).name, options );
-    summary = vertcat( summary, analysis(file).summary );
+    summary = concatenateSummaryTables( summary, analysis(file).summary );
   end
   if options.produceSummaryTable
     writetable( summary, 'Summary.xls' )
     save( 'analysis.mat', 'analysis', 'summary' )
   end
 end
-  
+
+%%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%%
+% helper function for ensuring properties of summary table
+function summary = concatenateSummaryTables( summary, newTable )
+  if ~isempty( summary ) && ismember( newTable.Row, summary.Properties.RowNames )
+    allRowNames = vertcat( summary.Properties.RowNames, newTable.Row );
+    allRowNames = matlab.lang.makeUniqueStrings( allRowNames );
+    newRowName = allRowNames(end);
+    newTable.Row = newRowName;
+  end
+  summary = vertcat( summary, newTable );
+end % helper function
+
 %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%%
 % sequester the code for parsing input into this function down here
 function options = parseOptions( parser, varargin )
