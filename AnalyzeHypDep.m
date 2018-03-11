@@ -75,8 +75,6 @@ function analysis = AnalyzeHypDep( filename, varargin )
   if options.saveMatFile
     save( analysis.cellId, 'analysis' )
   end
-  disp( 'milkshake' )
-
 end
 
 %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%%

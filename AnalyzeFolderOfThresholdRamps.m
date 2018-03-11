@@ -1,4 +1,4 @@
-function varargout = AnalyzeFolderOfHypDeps( directory, varargin )
+function varargout = AnalyzeFolderOfThresholdRamps( directory, varargin )
   % use an inputParser object to parse options passed in from above
   optionParser = inputParser();
   optionParser.StructExpand = true;
@@ -18,7 +18,7 @@ function varargout = AnalyzeFolderOfHypDeps( directory, varargin )
   abfList = dir( '*.abf' );
   summary = [];
   for file = 1:numel( abfList )
-    analysis(file) = AnalyzeHypDep( abfList(file).name, options );
+    analysis(file) = AnalyzeThresholdRamp( abfList(file).name, options );
     summary = concatenateSummaryTables( summary, analysis(file).summary );
   end
   if options.produceSummaryTable

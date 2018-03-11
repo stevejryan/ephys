@@ -1,10 +1,11 @@
 function summaryRow = ProduceHypDepSummary( analysis )
 
-  varNames = {'IH', 'IAR', 'Tau', 'Rin', 'ISI1', 'ISIN', 'ISI1overN', 'fAHP'};
+  varNames = {'IhRatio', 'IAR', 'Tau', 'Rin', 'ISI1', 'ISIN', 'ISI1overN', ...
+    'fAHP', 'fAHPTime', 'mAHP', 'mAHPTime'};
   summaryRow = array2table( NaN( 1, numel( varNames ) ), 'VariableNames', varNames );
   catSpikes = concatenateSpikeStruct( analysis );
 
-  summaryRow.IH = analysis.hyp.IhRatio(1);
+  summaryRow.IhRatio = analysis.hyp.IhRatio(1);
   summaryRow.IAR = analysis.hyp.IAR;
   summaryRow.Tau = analysis.hyp.tau(end);
   summaryRow.Rin = analysis.hyp.Rin(end);
@@ -12,6 +13,9 @@ function summaryRow = ProduceHypDepSummary( analysis )
   summaryRow.ISIN = nanmedian( analysis.dep.lastIsi );
   summaryRow.ISI1overN = nanmedian( analysis.dep.firstIsi ./ analysis.dep.lastIsi );
   summaryRow.fAHP = nanmedian( catSpikes.fAHP );
+  summaryRow.fAHPTime = nanmedian( catSpikes.fAHPTime );
+  summaryRow.mAHP = nanmedian( catSpikes.mAHP );
+  summaryRow.mAHPTime = nanmedian( catSpikes.mAHPTime );
 
   summaryRow.Row = {analysis.cellId};
 

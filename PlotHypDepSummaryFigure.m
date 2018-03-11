@@ -1,5 +1,6 @@
 function f = PlotHypDepSummaryFigure( analysis )
   f = figure;
+  f.Position = [ 700, 300, 960, 540 ];
   a = gca;
   dt = 1 / analysis.samplesPerMs; % dt in milliseconds
   totalDuration = size( analysis.rawTraces, 1 );
