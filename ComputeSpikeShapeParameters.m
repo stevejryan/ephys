@@ -6,7 +6,7 @@ function [spikeStruct, options] = ComputeSpikeShapeParameters( trace, samplesPer
   % window of time after end of spike to look for a fast AHP.  This also
   % determines the window used for the mAHP, which picks up where this one
   % leaves off
-  optionParser.addParameter( 'fAhpWindow', [0 2] );
+  optionParser.addParameter( 'fAhpWindow', [0 0] );
   % turn on debugging plots
   optionParser.addParameter( 'debugPlots', true )
   % pass to a function to do a little extra parsing
@@ -35,6 +35,7 @@ function [spikeStruct, options] = ComputeSpikeShapeParameters( trace, samplesPer
   end
   
   spikeStruct = interpolateTimingParameters( samplesPerMs, spikeStruct, options );
+  options.fAhpWindow(2) = ceil( 4 * spikeStruct(1).AP10 );
   
   spikeStruct = findDerivParameters( samplesPerMs, spikeStruct, options );
   
@@ -42,6 +43,18 @@ function [spikeStruct, options] = ComputeSpikeShapeParameters( trace, samplesPer
   
 end
 
+% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%%
+% % do interpolation to calculate widths, rise time, and decay time
+% function options = computeFAhpWindow( samplesPerMs, spikeStruct, trace, options )
+%   a = 5;
+%   if isempty( options.fAhpWindow )
+%     for i = 1:numel( spikeStruct.spikeInitIndex )
+%     
+%     end
+%   else
+%     options.fAhpWindow = [0 2];
+%   end
+% end
 %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%%
 % do interpolation to calculate widths, rise time, and decay time
 function spikeStruct = interpolateTimingParameters( samplesPerMs, ...

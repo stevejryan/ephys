@@ -9,7 +9,7 @@ function summaryRow = ProduceRampSummary( analysis )
   catSpikes = concatenateSpikeStruct( analysis );
 
   disp( fprintf( 'Taking nanmedian of %d spikes', numel( catSpikes.height ) ) )
-  summaryRow.Amplitude = nanmedian( catSpikes.height - catSpikes.spikeThreshold );
+  summaryRow.Amplitude = nanmedian( catSpikes.height );
   summaryRow.HalfWidth = nanmedian( catSpikes.AP50 );
   summaryRow.RiseTime = nanmedian( catSpikes.riseTime );
   summaryRow.DecayTime = nanmedian( catSpikes.decayTime );
