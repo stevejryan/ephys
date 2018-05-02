@@ -1,0 +1,82 @@
+function f = PlotRampSummaryFigure( analysis )
+  f = figure;
+  f.Position = [ 700, 300, 960, 540 ];
+  a = gca;
+  dt = 1 / analysis.samplesPerMs; % dt in milliseconds
+  totalDuration = size( analysis.rawTraces, 1 );
+  time = dt:dt:(totalDuration / analysis.samplesPerMs);
+  % plot traces
+  dataLine = plot( time, analysis.rawTraces, 'b-' );
+  hold( a, 'on' )
+  rampSpikes = analysis.dep.rampSpikes;
+  % plot spike init
+  for ii=1:numel( rampSpikes )
+    if ~isempty( rampSpikes(ii).spikeWaveforms )
+      spikeInitLine = plot( rampSpikes(ii).spikeTimeMs, rampSpikes(ii).spikeThreshold, 'ro' );
+    end
+  end
+  
+  % plot fAHP
+  for ii=1:numel( rampSpikes )
+    if ~isempty( rampSpikes(ii).spikeWaveforms )
+      fAhpX = rampSpikes(ii).spikeTimeMs + rampSpikes(ii).fAHPTime - dt;
+      fAhpY = rampSpikes(ii).fAHPAbsolute;
+      fAhpLine = plot( fAhpX, fAhpY, 'mo', 'MarkerFaceColor', 'magenta' );
+    end
+  end
+  
+  % plot mAHP
+  for ii=1:numel( rampSpikes )
+    if ~isempty( rampSpikes(ii).spikeWaveforms )
+      mAhpX = rampSpikes(ii).spikeTimeMs + rampSpikes(ii).mAHPTime - dt;
+      mAhpY = rampSpikes(ii).mAHPAbsolute;
+      mAhpLine = plot( mAhpX, mAhpY, 'ko', 'MarkerFaceColor', 'black' );
+    end
+  end
+  
+  % plot spike width summaries
+  widthColors = hot;
+  for ii=1:numel( rampSpikes )
+    if ~isempty( rampSpikes(ii).spikeWaveforms )
+      AP10_X = rampSpikes(ii).AP10_TimesMs' + rampSpikes(ii).spikeTimeMs - dt;
+      AP10_Y = repmat( rampSpikes(ii).AP10_Voltage, size( AP10_X ) );
+      AP10_Line = plot( AP10_X, AP10_Y, 'o', 'Color', widthColors( round( 0.1*size(widthColors, 1) ) );
+      
+      AP20_X = rampSpikes(ii).AP20_TimesMs' + rampSpikes(ii).spikeTimeMs - dt;
+      AP20_Y = repmat( rampSpikes(ii).AP20_Voltage, size( AP20_X ) );
+      AP20_Line = plot( AP20_X, AP20_Y, 'go' );
+      
+      AP50_X = rampSpikes(ii).AP50_TimesMs' + rampSpikes(ii).spikeTimeMs - dt;
+      AP50_Y = repmat( rampSpikes(ii).AP50_Voltage, size( AP50_X ) );
+      AP50_Line = plot( AP50_X, AP50_Y, 'ro' );
+      
+      AP80_X = rampSpikes(ii).AP80_TimesMs' + rampSpikes(ii).spikeTimeMs - dt;
+      AP80_Y = repmat( rampSpikes(ii).AP80_Voltage, size( AP80_X ) );
+      AP80_Line = plot( AP80_X, AP80_Y, 'ko' );
+      
+      AP90_X = rampSpikes(ii).AP90_TimesMs' + rampSpikes(ii).spikeTimeMs - dt;
+      AP90_Y = repmat( rampSpikes(ii).AP90_Voltage, size( AP90_X ) );
+      AP90_Line = plot( AP90_X, AP90_Y, 'ko' );
+    end
+  end
+  
+  % make it purdy
+  f.Name = analysis.cellId;
+  title( analysis.cellId )
+  f.Color = 'white';
+  ylabel( 'Membrane Potential (mV)' )
+  xlabel( 'Time (ms)' )
+  legend( [dataLine(1), spikeInitLine, fAhpLine, mAhpLine], ...
+    {'Memb. Potential', 'Spike Initiation', 'Fast AHP', 'Medium AHP'} )
+  
+  % set axis window
+  beginWindow = 0;
+  leftStim = min( analysis.dep.stimTimes(1,1) );
+  rightStim = max( analysis.dep.stimTimes(1,2) );
+  endWindow = max( time );
+  bottomWindow = min( min( analysis.rawTraces ) ) - 3;
+  topWindow = max( max( analysis.rawTraces ) ) + 3;
+  axis( [beginWindow, ((endWindow-rightStim)/2+rightStim), bottomWindow, topWindow] ) % because it just 
+  % fucking looks off-center, that's why
+  
+end

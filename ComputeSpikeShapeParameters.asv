@@ -212,7 +212,7 @@ function spikeStruct = findAhpParameters( trace, samplesPerMs, spikeStruct, opti
     if isnan( mAhpAbs )
       mAhpInd = NaN;
     end
-    mAhpTime = (mAhpInd + peakInd + options.fAhpWindow(2)*samplesPerMs - 1) / samplesPerMs;
+    mAhpTime = (mAhpInd + peakInd - 1) / samplesPerMs;
     mAhp = mAhpAbs - spikeStruct.spikeThreshold(i);
     
     spikeStruct.fAHP(i) = fAhp;
