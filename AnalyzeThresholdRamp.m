@@ -61,7 +61,6 @@ function analysis = AnalyzeThresholdRamp( filename, varargin )
   % objects
   analysis.summary = ProduceRampSummary( analysis );
   analysis.options = options;
-  disp( 'milkshake' )
 
 end
 
